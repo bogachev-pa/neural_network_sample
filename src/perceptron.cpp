@@ -14,7 +14,7 @@ Perceptron::~Perceptron(void)
 {
 }
 
-std::vector<double> Perceptron::get_output(const std::vector<double>& input)
+std::vector<double> Perceptron::get_output(const std::vector<double>& input) const
 {
 	std::vector<double> weighted_output;
 	std::vector<double> output;

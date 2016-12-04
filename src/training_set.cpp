@@ -34,6 +34,9 @@ Training_set::Training_set(std::string init_file_path)
 		Training_data t_data;
 		iss.str(line);
 
+		/* Поляризационный сигнал */
+		t_data.input.push_back(1);
+
 		for (unsigned int i = 0; i < num_inputs; i++) {
 			double input;
 
@@ -51,6 +54,9 @@ Training_set::Training_set(std::string init_file_path)
 		training_data_arr.push_back(t_data);
 		iss.clear();
 	}
+
+	/* Учет поляризационного сигнала */
+	num_inputs++;
 
 	print_data();
 }

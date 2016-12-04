@@ -1,6 +1,7 @@
 #include "neuron.h"
 #include "perceptron.h"
 #include "training_set.h"
+#include "plot.h"
 
 #include <iostream>
 #include <iomanip>
@@ -12,26 +13,39 @@ void configure_stdout(void)
 
 int main(int argc, char **argv)
 {
+	std::string input_file_path;
+	std::string coord_file_path;
+
 	configure_stdout();
 
-	if (argc != 2) {
+	if (argc != 3) {
 		std::cout << "Incorrect number of arguments" << std::endl;
 		std::cout << "Usage:" << std::endl;
-		std::cout << argv[0] << " <input_file_path>" << std::endl;
+		std::cout << argv[0] << " <input_file_path> <coord_file_path>" << std::endl;
 		return 1;
 	}
 
-	Training_set t = Training_set(argv[1]);
+	input_file_path = std::string(argv[1]);
+	coord_file_path = std::string(argv[2]);
+
+	Training_set t = Training_set(input_file_path);
 	Perceptron n = Perceptron(t.num_inputs, t.num_outputs);
+	Plot p = Plot(coord_file_path);
+
+	p.init_plot_script();
+	p.make_training_set_datasheet(t);
 
 	std::cout << "Check nn before training:" << std::endl;
 	n.check_training(t);
 
 	std::cout << "Train nn." << std::endl;
-	n.train_online(t);
+	n.train_online(t, p);
 
 	std::cout << "Check nn after training:" << std::endl;
 	n.check_training(t);
+
+	p.finalize_plot_script();
+	p.make_plot();
 
 	return 0;
 }

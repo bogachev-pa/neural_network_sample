@@ -1,5 +1,6 @@
 #include "neuron.h"
 #include "training_set.h"
+#include "util.h"
 
 #include <iostream>
 #include <iomanip>
@@ -26,7 +27,7 @@ Neuron::~Neuron(void)
 {
 }
 
-void Neuron::print_weights(void)
+void Neuron::print_weights(void) const
 {
 #ifdef NN_DEBUG
 	std::cout << "Neuron weights (" << num_inputs << ", " << num_outputs << "):" << std::endl;
@@ -43,7 +44,7 @@ void Neuron::print_weights(void)
 #endif
 }
 
-std::vector<double> Neuron::get_weighted_output(const std::vector<double>& inputs)
+std::vector<double> Neuron::get_weighted_output(const std::vector<double>& inputs) const
 {
 	std::vector<double> weighted_output;
 
@@ -64,26 +65,7 @@ std::vector<double> Neuron::get_weighted_output(const std::vector<double>& input
 	return weighted_output;
 }
 
-namespace {
-
-unsigned int get_index_max(const std::vector<double>& arr)
-{
-	double max = arr.at(0);
-	unsigned int index_max = 0;
-
-	for (unsigned int i = 1; i < arr.size(); i++) {
-		if (arr.at(i) > max) {
-			max = arr.at(i);
-			index_max = i;
-		}
-	}
-
-	return index_max;
-}
-
-}
-
-void Neuron::check_training(const Training_set& training_set)
+void Neuron::check_training(const Training_set& training_set) const
 {
 	unsigned int num_correct_answers = 0;
 	std::vector<Training_set::Training_data> training_data_arr = training_set.training_data_arr;
@@ -144,7 +126,7 @@ void Neuron::set_random_weights(void)
 
 
 
-void Neuron::train_online(const Training_set& training_set)
+void Neuron::train_online(const Training_set& training_set, const Plot& plot)
 {
 	std::vector<Training_set::Training_data> training_data_arr = training_set.training_data_arr;
 
@@ -168,5 +150,7 @@ void Neuron::train_online(const Training_set& training_set)
 			print_weights();
 
 		}
+
+		plot.make_output_datasheet(this, i);
 	}
 }

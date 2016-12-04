@@ -24,7 +24,10 @@ nn_objects = \
   $(OBJDIR)/main.o \
   $(OBJDIR)/neuron.o \
   $(OBJDIR)/perceptron.o \
-  $(OBJDIR)/training_set.o
+  $(OBJDIR)/training_set.o \
+  $(OBJDIR)/plot.o \
+  $(OBJDIR)/util.o
+
 
 all: nn
 
@@ -45,6 +48,14 @@ $(OBJDIR)/perceptron.o: perceptron.cpp
 	$(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/training_set.o: training_set.cpp
+	@mkdir -p $(OBJDIR)
+	$(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/plot.o: plot.cpp
+	@mkdir -p $(OBJDIR)
+	$(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/util.o: util.cpp
 	@mkdir -p $(OBJDIR)
 	$(CFLAGS) -c $< -o $@
 
