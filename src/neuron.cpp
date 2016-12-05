@@ -124,8 +124,6 @@ void Neuron::set_random_weights(void)
 	print_weights();
 }
 
-
-
 void Neuron::train_online(const Training_set& training_set, const Plot& plot)
 {
 	std::vector<Training_set::Training_data> training_data_arr = training_set.training_data_arr;
