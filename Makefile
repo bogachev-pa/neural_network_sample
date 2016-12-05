@@ -4,9 +4,7 @@ vpath %.h src
 
 OBJDIR = obj
 BINDIR = bin
-LOGSDIR = logs
-OUTPUTDIR = output
-INC = -Ithird-party
+PLOTDIR = plot
 
 CC = g++ -std=c++03
 CFLAGS = $(CC) -Wall
@@ -17,8 +15,6 @@ else
   CFLAGS += -O3 -DNDEBUG
 endif
 
-CFLAGS_WEXTRA = $(CFLAGS) -Wextra
-
 nn_binary = $(BINDIR)/nn
 nn_objects = \
   $(OBJDIR)/main.o \
@@ -27,7 +23,6 @@ nn_objects = \
   $(OBJDIR)/training_set.o \
   $(OBJDIR)/plot.o \
   $(OBJDIR)/util.o
-
 
 all: nn
 
@@ -61,8 +56,8 @@ $(OBJDIR)/util.o: util.cpp
 
 .PHONY: clean
 clean:
-	rm -f $(BINDIR)/* $(OBJDIR)/*
+	rm -rf $(BINDIR)/* $(OBJDIR)/*
 
 .PHONY: super_clean
 super_clean:
-	rm -f $(BINDIR)/* $(OBJDIR)/* $(LOGSDIR)/* $(OUTPUTDIR)/*
+	rm -rf $(BINDIR)/* $(OBJDIR)/* $(PLOTDIR)/*
