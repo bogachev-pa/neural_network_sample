@@ -13,3 +13,11 @@ Run:
 For example:
 
 `./bin/nn input/5.txt input/coord.txt`
+
+Show output plot:
+
+`gnuplot plot/plot.pl`
+
+Show weights plot:
+
+`gnuplot plot/plot_weights.pl`

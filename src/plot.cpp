@@ -9,10 +9,13 @@
 #include <iostream>
 #include <stdexcept>
 #include <stdlib.h>
+#include <cmath>
 
 #define PLOT_FOLDER "plot/"
 #define PLOT_TEMP_FOLDER PLOT_FOLDER "temp/"
 #define PLOT_PATH PLOT_FOLDER "plot.pl"
+#define PLOT_WEIGHTS_PATH PLOT_FOLDER "plot_weights.pl"
+#define PLOT_WEIGHTS_TEMP_PATH PLOT_TEMP_FOLDER "w.dat"
 #define POINTS_OUTPUT_PATH PLOT_FOLDER "points_output.dat"
 #define NUMBER_OF_POINTS 3
 
@@ -71,7 +74,7 @@ Plot::Plot(std::string coord_file_path)
 #endif
 }
 
-void Plot::make_plot(void) const
+void Plot::run_plot(void) const
 {
 	if (system("gnuplot " PLOT_PATH)) {
 		std::cout << "Failed to run gnuplot" << std::endl;
@@ -80,7 +83,10 @@ void Plot::make_plot(void) const
 
 void Plot::init_plot_script(void) const
 {
-	std::string path = PLOT_PATH;
+	if (system("rm -rf " PLOT_FOLDER)) {
+		std::cout << "Failed to remove plot folder " << PLOT_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_FOLDER);
+	}
 
 	if (system("mkdir -p " PLOT_FOLDER)) {
 		std::cout << "Failed to create folder " << PLOT_FOLDER << std::endl;
@@ -100,13 +106,26 @@ void Plot::init_plot_script(void) const
 	script << "unset ztics;\n";
 	script << "set term x11;\n";
 	script.close();
+
+	std::ofstream weights_script(PLOT_WEIGHTS_PATH);
+	weights_script << "set term x11;" << std::endl;
+	weights_script << "reset;" << std::endl;
+	weights_script << "set style data lines;" << std::endl;
+	/* FIXME: hardcode */
+	weights_script << "plot \"" << PLOT_WEIGHTS_TEMP_PATH << "\" using 1:3 title \"w1\" lt 2 lc rgb \"blue\" lw 3, "
+			<< "\"" << PLOT_WEIGHTS_TEMP_PATH << "\" using 1:4 title \"w2\" lt 2 lc rgb \"red\" lw 3;" << std::endl;
+	weights_script.close();
 }
 
 void Plot::finalize_plot_script(void) const
 {
 	std::ofstream script(PLOT_PATH, std::ofstream::app);
-	script << "pause -1;\n";
+	script << "pause -1;" << std::endl;
 	script.close();
+
+	std::ofstream weights_script(PLOT_WEIGHTS_PATH, std::ofstream::app);
+	weights_script << "pause -1;" << std::endl;
+	weights_script.close();
 }
 
 std::vector<double> Plot::normalize_coordinates(const std::vector<double>& points) const
@@ -137,12 +156,37 @@ void Plot::make_training_set_datasheet(const Training_set& training_set) const
 		Training_set::Training_data t_data = training_set.training_data_arr.at(i);
 		std::vector<double> normalized_points;
 		unsigned int output_index;
+		double output_value;
 
 		normalized_points = normalize_coordinates(t_data.input);
 		output_index = get_index_max(t_data.output);
 
-		datasheet << normalized_points.at(0) << "\t" << normalized_points.at(1) << "\t" << output_index << std::endl;
+		if (t_data.output.size() > 1)
+			output_value = output_index;
+		else
+			output_value = (int)round(t_data.output.at(0));
+
+		datasheet << normalized_points.at(0) << "\t" << normalized_points.at(1) << "\t" << output_value << std::endl;
 	}
+
+	datasheet.close();
+}
+
+void Plot::make_weights_datasheet(const Neuron *neuron, unsigned int num) const
+{
+	std::ofstream datasheet;
+
+	datasheet.open(PLOT_WEIGHTS_TEMP_PATH, std::ofstream::app);
+
+	datasheet << num << " ";
+
+	for (unsigned int i = 0; i < neuron->num_inputs; i++) {
+		for (unsigned int j = 0; j < neuron->num_outputs; j++) {
+			datasheet << neuron->w.at(i).at(j) << " ";
+		}
+	}
+
+	datasheet << std::endl;
 
 	datasheet.close();
 }
@@ -167,6 +211,7 @@ void Plot::make_output_datasheet(const Neuron *neuron, unsigned int training_num
 			std::vector<double> output;
 			std::vector<double> normalized_point;
 			unsigned int index_output;
+			double output_value;
 
 			points.push_back(1.0);
 			points.push_back(x1);
@@ -176,7 +221,12 @@ void Plot::make_output_datasheet(const Neuron *neuron, unsigned int training_num
 			index_output = get_index_max(output);
 			normalized_point = normalize_coordinates(points);
 
-			datasheet << normalized_point.at(0) << "\t" << normalized_point.at(1) << "\t" << index_output << std::endl;
+			if (output.size() > 1)
+				output_value = index_output;
+			else
+				output_value = (int)round(output.at(0));
+
+			datasheet << normalized_point.at(0) << "\t" << normalized_point.at(1) << "\t" << output_value << std::endl;
 		}
 
 		datasheet << std::endl;

@@ -45,7 +45,8 @@ int main(int argc, char **argv)
 	n.check_training(t);
 
 	p.finalize_plot_script();
-	p.make_plot();
+
+	/* p.run_plot(); */
 
 	return 0;
 }

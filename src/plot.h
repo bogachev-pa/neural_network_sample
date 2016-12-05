@@ -25,8 +25,9 @@ public:
 	void init_plot_script(void) const;
 	void finalize_plot_script(void) const ;
 	void make_training_set_datasheet(const Training_set& training_set) const;
+	void make_weights_datasheet(const Neuron *neuron, unsigned int num) const;
 	void make_output_datasheet(const Neuron *neuron, unsigned int training_num) const;
-	void make_plot(void) const;
+	void run_plot(void) const;
 private:
 	std::vector<double> normalize_coordinates(const std::vector<double>& points) const;
 
