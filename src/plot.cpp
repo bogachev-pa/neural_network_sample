@@ -73,15 +73,24 @@ Plot::Plot(std::string coord_file_path)
 
 void Plot::make_plot(void) const
 {
-	 system("gnuplot " PLOT_PATH);
+	if (system("gnuplot " PLOT_PATH)) {
+		std::cout << "Failed to run gnuplot" << std::endl;
+	}
 }
 
 void Plot::init_plot_script(void) const
 {
 	std::string path = PLOT_PATH;
 
-	system("mkdir -p " PLOT_FOLDER);
-	system("mkdir -p " PLOT_TEMP_FOLDER);
+	if (system("mkdir -p " PLOT_FOLDER)) {
+		std::cout << "Failed to create folder " << PLOT_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_FOLDER);
+	}
+
+	if (system("mkdir -p " PLOT_TEMP_FOLDER)) {
+		std::cout << "Failed to create folder " << PLOT_TEMP_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_TEMP_FOLDER);
+	}
 
 	std::ofstream script(PLOT_PATH);
 	script << "set xlabel \"x1\";\n";
