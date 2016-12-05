@@ -43,7 +43,6 @@ Plot::Plot(std::string coord_file_path)
 		coordinate_plane.push_back(point);
 	}
 
-
 	x_min = coordinate_plane.at(0).x;
 	x_max = coordinate_plane.at(0).x;
 	y_min = coordinate_plane.at(0).y;

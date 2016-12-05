@@ -83,7 +83,6 @@ void Neuron::check_training(const Training_set& training_set) const
 		index_output = get_index_max(output);
 		index_etalon = get_index_max(output_etalon);
 
-
 		if (output.size() > 1) {
 			if (index_output == index_etalon) {
 				num_correct_answers++;
