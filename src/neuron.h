@@ -15,11 +15,10 @@ public:
 	void set_random_weights(void);
 	double train_online(const std::vector<double>& input,
 			double output_etalon);
+	void print_weights(void) const;
 
 	std::vector<double> w;
 	unsigned int num_inputs;
-protected:
-	void print_weights(void) const;
 	double get_weighted_output(const std::vector<double>& inputs) const;
 };
 

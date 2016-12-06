@@ -40,7 +40,8 @@ int main(int argc, char **argv)
 	nn.check_training(t);
 
 	std::cout << "Train nn." << std::endl;
-	nn.train_online(t, p);
+	/* nn.train_online(t, p); */
+	nn.train_offline(t, p);
 
 	std::cout << "Check nn after training:" << std::endl;
 	nn.check_training(t);

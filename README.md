@@ -12,7 +12,7 @@ Run:
 
 For example:
 
-`./bin/nn input/5_only_0.txt input/coord.txt`
+`./bin/nn input/5_encode_new.txt input/coord.txt`
 
 Show output plot:
 
