@@ -1,4 +1,4 @@
-#include "neuron.h"
+#include "neural_network.h"
 #include "perceptron.h"
 #include "training_set.h"
 #include "plot.h"
@@ -29,20 +29,21 @@ int main(int argc, char **argv)
 	coord_file_path = std::string(argv[2]);
 
 	Training_set t = Training_set(input_file_path);
-	Perceptron n = Perceptron(t.num_inputs, t.num_outputs);
+	/* For now hardcode number of layers as 1. */
+	Neural_network nn = Neural_network(t.num_inputs, t.num_outputs, 1);
 	Plot p = Plot(coord_file_path);
 
-	p.init_plot_script();
+	p.init_plot_script(t.num_inputs, t.num_outputs);
 	p.make_training_set_datasheet(t);
 
 	std::cout << "Check nn before training:" << std::endl;
-	n.check_training(t);
+	nn.check_training(t);
 
 	std::cout << "Train nn." << std::endl;
-	n.train_online(t, p);
+	nn.train_online(t, p);
 
 	std::cout << "Check nn after training:" << std::endl;
-	n.check_training(t);
+	nn.check_training(t);
 
 	p.finalize_plot_script();
 

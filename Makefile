@@ -18,6 +18,8 @@ endif
 nn_binary = $(BINDIR)/nn
 nn_objects = \
   $(OBJDIR)/main.o \
+  $(OBJDIR)/neural_network.o \
+  $(OBJDIR)/layer.o \
   $(OBJDIR)/neuron.o \
   $(OBJDIR)/perceptron.o \
   $(OBJDIR)/training_set.o \
@@ -31,6 +33,14 @@ nn: $(nn_objects)
 	$(CFLAGS) -o $(nn_binary) $(nn_objects)
 
 $(OBJDIR)/main.o: main.cpp
+	@mkdir -p $(OBJDIR)
+	$(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/neural_network.o: neural_network.cpp
+	@mkdir -p $(OBJDIR)
+	$(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/layer.o: layer.cpp
 	@mkdir -p $(OBJDIR)
 	$(CFLAGS) -c $< -o $@
 

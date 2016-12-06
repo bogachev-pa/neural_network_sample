@@ -1,4 +1,4 @@
-#include "neuron.h"
+#include "neural_network.h"
 #include "plot.h"
 #include "util.h"
 
@@ -80,8 +80,10 @@ void Plot::run_plot(void) const
 	}
 }
 
-void Plot::init_plot_script(void) const
+void Plot::init_plot_script(unsigned int num_inputs, unsigned int num_outputs) const
 {
+	unsigned int counter;
+
 	if (system("rm -rf " PLOT_FOLDER)) {
 		std::cout << "Failed to remove plot folder " << PLOT_FOLDER << std::endl;
 		throw std::invalid_argument(PLOT_FOLDER);
@@ -110,9 +112,34 @@ void Plot::init_plot_script(void) const
 	weights_script << "set term x11;" << std::endl;
 	weights_script << "reset;" << std::endl;
 	weights_script << "set style data lines;" << std::endl;
-	/* FIXME: hardcode */
-	weights_script << "plot \"" << PLOT_WEIGHTS_TEMP_PATH << "\" using 1:3 title \"w1\" lt 2 lc rgb \"blue\" lw 3, "
-			<< "\"" << PLOT_WEIGHTS_TEMP_PATH << "\" using 1:4 title \"w2\" lt 2 lc rgb \"red\" lw 3;" << std::endl;
+
+	weights_script << "plot ";
+
+	counter = 0;
+
+	/* i starts from 1 to skip polarizing signal */
+	for (unsigned int i = 1; i < num_inputs; i++) {
+		for (unsigned int j = 0; j < num_outputs; j++) {
+			unsigned int y_column_pos = counter + 2;
+			unsigned int color_num = counter + 1;
+
+			weights_script << "\"" << PLOT_WEIGHTS_TEMP_PATH
+					<< "\" using 1:" << y_column_pos
+					<< " title \"w[" << i << "][" << j << "]\" "
+					<< "lt 2 lc " << color_num << " lw 3";
+
+			/* Checking if it is the last one */
+			if (i == num_inputs - 1 && j == num_outputs - 1) {
+				weights_script << ";";
+			} else {
+				weights_script << ", ";
+			}
+
+			counter++;
+		}
+	}
+
+	weights_script << std::endl;
 	weights_script.close();
 }
 
@@ -148,22 +175,24 @@ std::vector<double> Plot::normalize_coordinates(const std::vector<double>& point
 void Plot::make_training_set_datasheet(const Training_set& training_set) const
 {
 	std::ofstream datasheet;
+	std::vector<double> output;
 
 	datasheet.open(POINTS_OUTPUT_PATH);
 
 	for (unsigned long i = 0; i < training_set.training_data_arr.size(); ++i) {
 		Training_set::Training_data t_data = training_set.training_data_arr.at(i);
 		std::vector<double> normalized_points;
-		unsigned int output_index;
+		output = t_data.output;
 		double output_value;
 
 		normalized_points = normalize_coordinates(t_data.input);
-		output_index = get_index_max(t_data.output);
 
-		if (t_data.output.size() > 1)
-			output_value = output_index;
+		if (output.size() == 1)
+			output_value = (int)round(output.at(0));
+		else if (output.size() == 2)
+			output_value = output_to_code(output);
 		else
-			output_value = (int)round(t_data.output.at(0));
+			output_value = get_index_max(output);
 
 		datasheet << normalized_points.at(0) << "\t" << normalized_points.at(1) << "\t" << output_value << std::endl;
 	}
@@ -171,7 +200,8 @@ void Plot::make_training_set_datasheet(const Training_set& training_set) const
 	datasheet.close();
 }
 
-void Plot::make_weights_datasheet(const Neuron *neuron, unsigned int num) const
+void Plot::make_weights_datasheet(const Neural_network *nn,
+		unsigned int num) const
 {
 	std::ofstream datasheet;
 
@@ -179,9 +209,14 @@ void Plot::make_weights_datasheet(const Neuron *neuron, unsigned int num) const
 
 	datasheet << num << " ";
 
-	for (unsigned int i = 0; i < neuron->num_inputs; i++) {
-		for (unsigned int j = 0; j < neuron->num_outputs; j++) {
-			datasheet << neuron->w.at(i).at(j) << " ";
+	for (unsigned int i = 0; i < nn->num_layers; i++) {
+		for (unsigned int j = 0; j < nn->num_outputs; j++) {
+			Perceptron n = nn->layers.at(i).neurons.at(j);
+
+			/* k starts from 1 to skip polarizing signal */
+			for (unsigned int k = 1; k < n.num_inputs; k++) {
+				datasheet << n.w.at(k) << " ";
+			}
 		}
 	}
 
@@ -190,7 +225,8 @@ void Plot::make_weights_datasheet(const Neuron *neuron, unsigned int num) const
 	datasheet.close();
 }
 
-void Plot::make_output_datasheet(const Neuron *neuron, unsigned int training_num) const
+void Plot::make_output_datasheet(const Neural_network *nn,
+		unsigned int training_num) const
 {
 	std::ofstream datasheet;
 	std::string datasheet_path;
@@ -209,21 +245,21 @@ void Plot::make_output_datasheet(const Neuron *neuron, unsigned int training_num
 			std::vector<double> points;
 			std::vector<double> output;
 			std::vector<double> normalized_point;
-			unsigned int index_output;
 			double output_value;
 
 			points.push_back(1.0);
 			points.push_back(x1);
 			points.push_back(x2);
 
-			output = neuron->get_output(points);
-			index_output = get_index_max(output);
+			output = nn->get_output(points);
 			normalized_point = normalize_coordinates(points);
 
-			if (output.size() > 1)
-				output_value = index_output;
-			else
+			if (output.size() == 1)
 				output_value = (int)round(output.at(0));
+			else if (output.size() == 2)
+				output_value = output_to_code(output);
+			else
+				output_value = get_index_max(output);
 
 			datasheet << normalized_point.at(0) << "\t" << normalized_point.at(1) << "\t" << output_value << std::endl;
 		}
