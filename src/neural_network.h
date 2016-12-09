@@ -45,13 +45,13 @@ public:
 
 	class Train_error_nn {
 	public:
-		Train_error_nn(const std::vector<Layer>& layers)
+		Train_error_nn(const std::vector<Layer *>& layers)
 		{
 			for (unsigned int i = 0; i < layers.size(); i++) {
-				error_neurons.push_back(std::vector<Train_error_neuron>());
+				error_neurons.push_back(std::vector<Train_error_neuron *>());
 
-				for (unsigned int j = 0; j < layers.at(i).num_neurons; j++) {
-					error_neurons.at(i).push_back(Train_error_neuron());
+				for (unsigned int j = 0; j < layers.at(i)->num_neurons; j++) {
+					error_neurons.at(i).push_back(new Train_error_neuron());
 				}
 			}
 		}
@@ -62,7 +62,7 @@ public:
 
 			for (unsigned int i = 0; i < error_neurons.size(); i++) {
 				for (unsigned int j = 0; j < error_neurons.at(i).size(); j++) {
-					double nu = error_neurons.at(i).at(j).nu;
+					double nu = error_neurons.at(i).at(j)->nu;
 					if (nu > nu_max)
 						nu_max = nu;
 				}
@@ -71,7 +71,7 @@ public:
 			return nu_max;
 		}
 
-		std::vector<std::vector<Train_error_neuron> > error_neurons;
+		std::vector<std::vector<Train_error_neuron *> > error_neurons;
 	};
 
 	Neural_network(unsigned int num_inputs, unsigned int num_outputs,
@@ -87,7 +87,7 @@ public:
 	unsigned int num_outputs;
 	unsigned int num_layers;
 
-	std::vector<Layer> layers;
+	std::vector<Layer *> layers;
 protected:
 	void set_random_weights(void);
 	double train_neuron_offline(const Training_set& training_set,

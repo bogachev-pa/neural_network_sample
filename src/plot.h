@@ -31,7 +31,7 @@ public:
 private:
 	std::vector<double> normalize_coordinates(const std::vector<double>& points) const;
 
-	std::vector<Point> coordinate_plane;
+	std::vector<Point *> coordinate_plane;
 	double x_max;
 	double x_min;
 	double y_max;

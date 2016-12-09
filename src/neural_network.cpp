@@ -19,12 +19,15 @@ Neural_network::Neural_network(unsigned int num_inputs,
 		num_layers(num_layers)
 {
 	for (unsigned int i = 0; i < num_layers; i++) {
-		layers.push_back(Layer(num_inputs, num_outputs));
+		layers.push_back(new Layer(num_inputs, num_outputs));
 	}
 }
 
 Neural_network::~Neural_network(void)
 {
+	for (unsigned int i = 0; i < num_layers; i++) {
+		delete layers.at(i);
+	}
 }
 
 std::vector<double> Neural_network::get_output(
@@ -35,9 +38,9 @@ std::vector<double> Neural_network::get_output(
 
 	/* TODO: number of inputs/outputs synchronization? */
 	for (unsigned int i = 0; i < num_layers; i++) {
-		Layer layer = layers.at(i);
+		Layer *layer = layers.at(i);
 
-		output = layer.get_output(intermediate_input);
+		output = layer->get_output(intermediate_input);
 		intermediate_input = output;
 	}
 
@@ -47,11 +50,12 @@ std::vector<double> Neural_network::get_output(
 void Neural_network::check_training(const Training_set& training_set) const
 {
 	unsigned int num_correct_answers = 0;
-	std::vector<Training_set::Training_data> training_data_arr = training_set.training_data_arr;
+	std::vector<Training_set::Training_data *> training_data_arr = training_set.training_data_arr;
 
 	for (unsigned int i = 0; i < training_data_arr.size(); i++) {
-		std::vector<double> input = training_data_arr.at(i).input;
-		std::vector<double> output_etalon = training_data_arr.at(i).output;
+		Training_set::Training_data *t_data = training_data_arr.at(i);
+		std::vector<double> input = t_data->input;
+		std::vector<double> output_etalon = t_data->output;
 		std::vector<double> output;
 		unsigned int index_output;
 		unsigned int index_etalon;
@@ -110,7 +114,7 @@ void Neural_network::check_training(const Training_set& training_set) const
 
 void Neural_network::train_online(const Training_set& training_set, const Plot& plot)
 {
-	std::vector<Training_set::Training_data> training_data_arr
+	std::vector<Training_set::Training_data *> training_data_arr
 			= training_set.training_data_arr;
 	unsigned int counter = 0;
 
@@ -120,13 +124,14 @@ void Neural_network::train_online(const Training_set& training_set, const Plot& 
 		double max_delta = 0;
 
 		for (unsigned int j = 0; j < training_data_arr.size(); j++) {
-			std::vector<double> input = training_data_arr.at(j).input;
-			std::vector<double> output_etalon = training_data_arr.at(j).output;
+			std::vector<double> input = training_data_arr.at(j)->input;
+			std::vector<double> output_etalon = training_data_arr.at(j)->output;
 
 			for (unsigned int k = 0; k < num_layers; k++) {
+				Layer *layer = layers.at(k);
 				double delta;
 
-				delta = layers.at(k).train_online(input, output_etalon);
+				delta = layer->train_online(input, output_etalon);
 
 				if (fabs(delta) > max_delta)
 					max_delta = fabs(delta);
@@ -147,7 +152,7 @@ void Neural_network::train_online(const Training_set& training_set, const Plot& 
 double Neural_network::train_neuron_offline(const Training_set& training_set,
 		Neuron *neuron, unsigned int num, double nu)
 {
-	std::vector<Training_set::Training_data> training_data_arr
+	std::vector<Training_set::Training_data *> training_data_arr
 			= training_set.training_data_arr;
 	double error_sum = 0;
 	std::vector<double> deltas;
@@ -158,8 +163,10 @@ double Neural_network::train_neuron_offline(const Training_set& training_set,
 
 	for (unsigned int j = 0; j < training_data_arr.size(); j++) {
 		for (unsigned int i = 0; i < neuron->num_inputs; i++) {
-			std::vector<double> input = training_data_arr.at(j).input;
-			double output_etalon = training_data_arr.at(j).output.at(num);
+			Training_set::Training_data *t_data = training_data_arr.at(j);
+
+			std::vector<double> input = t_data->input;
+			double output_etalon = t_data->output.at(num);
 			double output_value;
 			double delta;
 
@@ -189,9 +196,10 @@ void Neural_network::train_offline(const Training_set& training_set, const Plot&
 
 	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
 		for (unsigned int j = 0; j < num_layers; j++) {
-			for (unsigned int k = 0; k < layers.at(j).num_neurons; k++) {
-				Train_error_neuron *train_error_neuron = &train_error_nn.error_neurons.at(j).at(k);
-				Perceptron *neuron = &layers.at(j).neurons.at(k);
+			Layer *layer = layers.at(j);
+			for (unsigned int k = 0; k < layer->num_neurons; k++) {
+				Train_error_neuron *train_error_neuron = train_error_nn.error_neurons.at(j).at(k);
+				Neuron *neuron = layer->neurons.at(k);
 				double error_cur;
 
 				neuron->print_weights();
@@ -216,8 +224,8 @@ void Neural_network::train_offline(const Training_set& training_set, const Plot&
 void Neural_network::set_random_weights(void)
 {
 	for (unsigned int i = 0; i < num_layers; i++) {
-		Layer l = layers.at(i);
+		Layer *l = layers.at(i);
 
-		l.set_random_weights();
+		l->set_random_weights();
 	}
 }

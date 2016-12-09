@@ -31,24 +31,24 @@ Training_set::Training_set(std::string init_file_path)
 	iss.clear();
 
 	while (getline(init_file, line)) {
-		Training_data t_data;
+		Training_data *t_data = new Training_data();
 		iss.str(line);
 
 		/* Поляризационный сигнал */
-		t_data.input.push_back(1);
+		t_data->input.push_back(1);
 
 		for (unsigned int i = 0; i < num_inputs; i++) {
 			double input;
 
 			iss >> input;
-			t_data.input.push_back(input);
+			t_data->input.push_back(input);
 		}
 
 		for (unsigned int i = 0; i < num_outputs; i++) {
 			double output;
 
 			iss >> output;
-			t_data.output.push_back(output);
+			t_data->output.push_back(output);
 		}
 
 		training_data_arr.push_back(t_data);
@@ -63,22 +63,25 @@ Training_set::Training_set(std::string init_file_path)
 
 Training_set::~Training_set(void)
 {
+	for (unsigned int i = 0; i < training_data_arr.size(); i++) {
+		delete training_data_arr.at(i);
+	}
 }
 
 void Training_set::print_data(void)
 {
-#ifdef NN_DEBUG
+#ifdef NN_DEBUGp
 	std::cout << "Training set:" << std::endl;
 
 	for (unsigned int i = 0; i < training_data_arr.size(); i++) {
-		Training_data t_data = training_data_arr.at(i);
+		Training_data *t_data = training_data_arr.at(i);
 
 		for (unsigned int j = 0; j < num_inputs; j++) {
-			std::cout << t_data.input.at(j) << " ";
+			std::cout << t_data->input.at(j) << " ";
 		}
 
 		for (unsigned int j = 0; j < num_outputs; j++) {
-			std::cout << t_data.output.at(j) << " ";
+			std::cout << t_data->output.at(j) << " ";
 		}
 
 		std::cout << std::endl;

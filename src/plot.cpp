@@ -33,24 +33,24 @@ Plot::Plot(std::string coord_file_path)
 	}
 
 	while (getline(coord_file, line)) {
-		Point point;
+		Point *point = new Point();
 
 		iss.str(line);
-		iss >> point.x;
-		iss >> point.y;
+		iss >> point->x;
+		iss >> point->y;
 		iss.clear();
 
 		coordinate_plane.push_back(point);
 	}
 
-	x_min = coordinate_plane.at(0).x;
-	x_max = coordinate_plane.at(0).x;
-	y_min = coordinate_plane.at(0).y;
-	y_max = coordinate_plane.at(0).y;
+	x_min = coordinate_plane.at(0)->x;
+	x_max = coordinate_plane.at(0)->x;
+	y_min = coordinate_plane.at(0)->y;
+	y_max = coordinate_plane.at(0)->y;
 
 	for (unsigned int i = 1; i < coordinate_plane.size(); i++) {
-		double x = coordinate_plane.at(i).x;
-		double y = coordinate_plane.at(i).y;
+		double x = coordinate_plane.at(i)->x;
+		double y = coordinate_plane.at(i)->y;
 
 		if (x > x_max)
 			x_max = x;
@@ -68,7 +68,7 @@ Plot::Plot(std::string coord_file_path)
 #ifdef NN_DEBUG
 	std::cout << "Basic points of coordinate plane:" << std::endl;
 	for (unsigned int i = 0; i < coordinate_plane.size(); ++i) {
-		std::cout << coordinate_plane.at(i).x << " " << coordinate_plane.at(i).y << std::endl;
+		std::cout << coordinate_plane.at(i)->x << " " << coordinate_plane.at(i)->y << std::endl;
 	}
 #endif
 }
@@ -180,12 +180,12 @@ void Plot::make_training_set_datasheet(const Training_set& training_set) const
 	datasheet.open(POINTS_OUTPUT_PATH);
 
 	for (unsigned long i = 0; i < training_set.training_data_arr.size(); ++i) {
-		Training_set::Training_data t_data = training_set.training_data_arr.at(i);
+		Training_set::Training_data *t_data = training_set.training_data_arr.at(i);
 		std::vector<double> normalized_points;
-		output = t_data.output;
+		output = t_data->output;
 		double output_value;
 
-		normalized_points = normalize_coordinates(t_data.input);
+		normalized_points = normalize_coordinates(t_data->input);
 
 		if (output.size() == 1)
 			output_value = (int)round(output.at(0));
@@ -211,11 +211,11 @@ void Plot::make_weights_datasheet(const Neural_network *nn,
 
 	for (unsigned int i = 0; i < nn->num_layers; i++) {
 		for (unsigned int j = 0; j < nn->num_outputs; j++) {
-			Perceptron n = nn->layers.at(i).neurons.at(j);
+			Neuron *neuron = nn->layers.at(i)->neurons.at(j);
 
 			/* k starts from 1 to skip polarizing signal */
-			for (unsigned int k = 1; k < n.num_inputs; k++) {
-				datasheet << n.w.at(k) << " ";
+			for (unsigned int k = 1; k < neuron->num_inputs; k++) {
+				datasheet << neuron->w.at(k) << " ";
 			}
 		}
 	}

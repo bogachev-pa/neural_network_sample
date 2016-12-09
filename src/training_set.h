@@ -26,7 +26,7 @@ public:
 
 	void print_data(void);
 
-	std::vector<Training_data> training_data_arr;
+	std::vector<Training_data *> training_data_arr;
 
 	unsigned int num_inputs;
 	unsigned int num_outputs;

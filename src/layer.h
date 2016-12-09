@@ -11,8 +11,7 @@ public:
 	Layer(unsigned int num_inputs, unsigned int num_neurons);
 	~Layer(void);
 
-	/* TODO: allow different types on neurons */
-	std::vector<Perceptron> neurons;
+	std::vector<Neuron *> neurons;
 
 	unsigned int num_neurons;
 
