@@ -11,44 +11,74 @@ void configure_stdout(void)
 	// std::cout << std::fixed << std::setprecision(3);
 }
 
+void print_usage(char **argv)
+{
+	std::cout << "Incorrect number of arguments" << std::endl;
+	std::cout << "Usage:" << std::endl;
+#ifdef NN_PLOT_COORD
+	std::cout << argv[0] << " <input_file_path> <coord_file_path>" << std::endl;
+#else
+	std::cout << argv[0] << " <input_file_path>" << std::endl;
+#endif
+}
+
+int check_args(int argc)
+{
+#ifdef NN_PLOT_COORD
+	int expected_argc = 3;
+#else
+	int expected_argc = 2;
+#endif
+
+	return argc != expected_argc;
+}
+
 int main(int argc, char **argv)
 {
+	Plot *p = NULL;
 	std::string input_file_path;
 	std::string coord_file_path;
 
 	configure_stdout();
 
-	if (argc != 3) {
-		std::cout << "Incorrect number of arguments" << std::endl;
-		std::cout << "Usage:" << std::endl;
-		std::cout << argv[0] << " <input_file_path> <coord_file_path>" << std::endl;
+	if (check_args(argc)) {
+		print_usage(argv);
 		return 1;
 	}
 
 	input_file_path = std::string(argv[1]);
-	coord_file_path = std::string(argv[2]);
 
-	Training_set t = Training_set(input_file_path);
+	Training_set *t = new Training_set(input_file_path);
 	/* For now hardcode number of layers as 1. */
-	Neural_network nn = Neural_network(t.num_inputs, t.num_outputs, 1);
-	Plot p = Plot(coord_file_path);
+	Neural_network *nn = new Neural_network(t->num_inputs, t->num_outputs, 1);
 
-	p.init_plot_script(t.num_inputs, t.num_outputs);
-	p.make_training_set_datasheet(t);
+	p = new Plot();
+	p->init_weights(t->num_inputs, t->num_outputs);
+
+#ifdef NN_PLOT_COORD
+	coord_file_path = std::string(argv[2]);
+	p->init_coord(coord_file_path);
+	p->make_training_set_datasheet(t);
+#endif
 
 	std::cout << "Check nn before training:" << std::endl;
-	nn.check_training(t);
+	nn->check_training(t);
 
 	std::cout << "Train nn." << std::endl;
 	/* nn.train_online(t, p); */
-	nn.train_offline(t, p);
+	nn->train_offline(t, p);
 
 	std::cout << "Check nn after training:" << std::endl;
-	nn.check_training(t);
+	nn->check_training(t);
 
-	p.finalize_plot_script();
+#ifdef NN_PLOT_COORD
+	p->finalize_coord();
+	/* p->run_plot(); */
+#endif
 
-	/* p.run_plot(); */
+	delete p;
+	delete nn;
+	delete t;
 
 	return 0;
 }

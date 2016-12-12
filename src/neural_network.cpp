@@ -47,10 +47,10 @@ std::vector<double> Neural_network::get_output(
 	return output;
 }
 
-void Neural_network::check_training(const Training_set& training_set) const
+void Neural_network::check_training(const Training_set *training_set) const
 {
 	unsigned int num_correct_answers = 0;
-	std::vector<Training_set::Training_data *> training_data_arr = training_set.training_data_arr;
+	std::vector<Training_set::Training_data *> training_data_arr = training_set->training_data_arr;
 
 	for (unsigned int i = 0; i < training_data_arr.size(); i++) {
 		Training_set::Training_data *t_data = training_data_arr.at(i);
@@ -112,10 +112,10 @@ void Neural_network::check_training(const Training_set& training_set) const
 	std::cout << num_correct_answers << " out of " << training_data_arr.size() << " answers are correct" << std::endl;
 }
 
-void Neural_network::train_online(const Training_set& training_set, const Plot& plot)
+void Neural_network::train_online(const Training_set *training_set, const Plot *plot)
 {
 	std::vector<Training_set::Training_data *> training_data_arr
-			= training_set.training_data_arr;
+			= training_set->training_data_arr;
 	unsigned int counter = 0;
 
 	set_random_weights();
@@ -137,10 +137,10 @@ void Neural_network::train_online(const Training_set& training_set, const Plot& 
 					max_delta = fabs(delta);
 			}
 
-			plot.make_weights_datasheet(this, counter++);
+			plot->make_weights_datasheet(this, counter++);
 		}
 
-		plot.make_output_datasheet(this, i);
+		plot->make_output_datasheet(this, i);
 
 		if (max_delta < TRAINING_ACCURACY) {
 			std::cout << "Weights delta is too small, so exiting after " << i + 1 << " iterations." << std::endl;
@@ -149,11 +149,11 @@ void Neural_network::train_online(const Training_set& training_set, const Plot& 
 	}
 }
 
-double Neural_network::train_neuron_offline(const Training_set& training_set,
+double Neural_network::train_neuron_offline(const Training_set *training_set,
 		Neuron *neuron, unsigned int num, double nu)
 {
 	std::vector<Training_set::Training_data *> training_data_arr
-			= training_set.training_data_arr;
+			= training_set->training_data_arr;
 	double error_sum = 0;
 	std::vector<double> deltas;
 
@@ -185,7 +185,7 @@ double Neural_network::train_neuron_offline(const Training_set& training_set,
 	return error_sum;
 }
 
-void Neural_network::train_offline(const Training_set& training_set, const Plot& plot)
+void Neural_network::train_offline(const Training_set *training_set, const Plot *plot)
 {
 	unsigned int counter = 0;
 	double nu_max;
@@ -210,8 +210,8 @@ void Neural_network::train_offline(const Training_set& training_set, const Plot&
 			}
 		}
 
-		plot.make_weights_datasheet(this, counter++);
-		plot.make_output_datasheet(this, i);
+		plot->make_weights_datasheet(this, counter++);
+		plot->make_output_datasheet(this, i);
 
 		nu_max = train_error_nn.get_max_nu();
 		if (nu_max < TRAINING_ACCURACY) {

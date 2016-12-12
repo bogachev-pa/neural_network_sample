@@ -19,7 +19,25 @@
 #define POINTS_OUTPUT_PATH PLOT_FOLDER "points_output.dat"
 #define NUMBER_OF_POINTS 3
 
-Plot::Plot(std::string coord_file_path)
+Plot::Plot(void) : coord_initialized(false)
+{
+	if (system("rm -rf " PLOT_FOLDER)) {
+		std::cout << "Failed to remove plot folder " << PLOT_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_FOLDER);
+	}
+
+	if (system("mkdir -p " PLOT_FOLDER)) {
+		std::cout << "Failed to create folder " << PLOT_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_FOLDER);
+	}
+
+	if (system("mkdir -p " PLOT_TEMP_FOLDER)) {
+		std::cout << "Failed to create folder " << PLOT_TEMP_FOLDER << std::endl;
+		throw std::invalid_argument(PLOT_TEMP_FOLDER);
+	}
+}
+
+void Plot::init_coord(std::string coord_file_path)
 {
 	std::ifstream coord_file;
 	std::string line;
@@ -71,33 +89,6 @@ Plot::Plot(std::string coord_file_path)
 		std::cout << coordinate_plane.at(i)->x << " " << coordinate_plane.at(i)->y << std::endl;
 	}
 #endif
-}
-
-void Plot::run_plot(void) const
-{
-	if (system("gnuplot " PLOT_PATH)) {
-		std::cout << "Failed to run gnuplot" << std::endl;
-	}
-}
-
-void Plot::init_plot_script(unsigned int num_inputs, unsigned int num_outputs) const
-{
-	unsigned int counter;
-
-	if (system("rm -rf " PLOT_FOLDER)) {
-		std::cout << "Failed to remove plot folder " << PLOT_FOLDER << std::endl;
-		throw std::invalid_argument(PLOT_FOLDER);
-	}
-
-	if (system("mkdir -p " PLOT_FOLDER)) {
-		std::cout << "Failed to create folder " << PLOT_FOLDER << std::endl;
-		throw std::invalid_argument(PLOT_FOLDER);
-	}
-
-	if (system("mkdir -p " PLOT_TEMP_FOLDER)) {
-		std::cout << "Failed to create folder " << PLOT_TEMP_FOLDER << std::endl;
-		throw std::invalid_argument(PLOT_TEMP_FOLDER);
-	}
 
 	std::ofstream script(PLOT_PATH);
 	script << "set xlabel \"x1\";\n";
@@ -107,6 +98,20 @@ void Plot::init_plot_script(unsigned int num_inputs, unsigned int num_outputs) c
 	script << "unset ztics;\n";
 	script << "set term x11;\n";
 	script.close();
+
+	coord_initialized = true;
+}
+
+void Plot::run_plot(void) const
+{
+	if (system("gnuplot " PLOT_PATH)) {
+		std::cout << "Failed to run gnuplot" << std::endl;
+	}
+}
+
+void Plot::init_weights(unsigned int num_inputs, unsigned int num_outputs) const
+{
+	unsigned int counter;
 
 	std::ofstream weights_script(PLOT_WEIGHTS_PATH);
 	weights_script << "set term x11;" << std::endl;
@@ -140,18 +145,18 @@ void Plot::init_plot_script(unsigned int num_inputs, unsigned int num_outputs) c
 	}
 
 	weights_script << std::endl;
+	weights_script << "pause -1;" << std::endl;
 	weights_script.close();
 }
 
-void Plot::finalize_plot_script(void) const
+void Plot::finalize_coord(void) const
 {
+	if (!coord_initialized)
+		return;
+
 	std::ofstream script(PLOT_PATH, std::ofstream::app);
 	script << "pause -1;" << std::endl;
 	script.close();
-
-	std::ofstream weights_script(PLOT_WEIGHTS_PATH, std::ofstream::app);
-	weights_script << "pause -1;" << std::endl;
-	weights_script.close();
 }
 
 std::vector<double> Plot::normalize_coordinates(const std::vector<double>& points) const
@@ -172,15 +177,18 @@ std::vector<double> Plot::normalize_coordinates(const std::vector<double>& point
 	return normalized_point;
 }
 
-void Plot::make_training_set_datasheet(const Training_set& training_set) const
+void Plot::make_training_set_datasheet(const Training_set *training_set) const
 {
 	std::ofstream datasheet;
 	std::vector<double> output;
 
+	if (!coord_initialized)
+		return;
+
 	datasheet.open(POINTS_OUTPUT_PATH);
 
-	for (unsigned long i = 0; i < training_set.training_data_arr.size(); ++i) {
-		Training_set::Training_data *t_data = training_set.training_data_arr.at(i);
+	for (unsigned long i = 0; i < training_set->training_data_arr.size(); ++i) {
+		Training_set::Training_data *t_data = training_set->training_data_arr.at(i);
 		std::vector<double> normalized_points;
 		output = t_data->output;
 		double output_value;
@@ -231,6 +239,9 @@ void Plot::make_output_datasheet(const Neural_network *nn,
 	std::ofstream datasheet;
 	std::string datasheet_path;
 	std::stringstream iss;
+
+	if (!coord_initialized)
+		return;
 
 	iss << PLOT_TEMP_FOLDER;
 	iss << training_num;

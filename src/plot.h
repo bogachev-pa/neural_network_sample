@@ -12,7 +12,7 @@ class Neural_network;
 class Plot
 {
 public:
-	Plot(std::string coord_file_path);
+	Plot(void);
 	~Plot(void)
 	{}
 
@@ -22,9 +22,10 @@ public:
 		double y;
 	};
 
-	void init_plot_script(unsigned int num_inputs, unsigned int num_outputs) const;
-	void finalize_plot_script(void) const ;
-	void make_training_set_datasheet(const Training_set& training_set) const;
+	void init_weights(unsigned int num_inputs, unsigned int num_outputs) const;
+	void init_coord(std::string coord_file_path);
+	void finalize_coord(void) const ;
+	void make_training_set_datasheet(const Training_set *training_set) const;
 	void make_weights_datasheet(const Neural_network *nn, unsigned int num) const;
 	void make_output_datasheet(const Neural_network *nn, unsigned int training_num) const;
 	void run_plot(void) const;
@@ -36,6 +37,8 @@ private:
 	double x_min;
 	double y_max;
 	double y_min;
+
+	bool coord_initialized;
 };
 
 #endif //_PLOT_H

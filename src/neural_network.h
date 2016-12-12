@@ -78,9 +78,9 @@ public:
 			unsigned int num_layers);
 	virtual ~Neural_network(void);
 
-	void check_training(const Training_set& training_set) const;
-	void train_online(const Training_set& training_set, const Plot& plot);
-	void train_offline(const Training_set& training_set, const Plot& plot);
+	void check_training(const Training_set *training_set) const;
+	void train_online(const Training_set *training_set, const Plot *plot);
+	void train_offline(const Training_set *training_set, const Plot *plot);
 	std::vector<double> get_output(const std::vector<double>& input) const;
 
 	unsigned int num_inputs;
@@ -90,7 +90,7 @@ public:
 	std::vector<Layer *> layers;
 protected:
 	void set_random_weights(void);
-	double train_neuron_offline(const Training_set& training_set,
+	double train_neuron_offline(const Training_set *training_set,
 			Neuron *neuron, unsigned int num, double nu);
 };
 
