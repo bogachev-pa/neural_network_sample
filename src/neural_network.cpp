@@ -60,7 +60,7 @@ void Neural_network::check_training(const Training_set *training_set) const
 		std::vector<double> output;
 		output = get_output(input);
 
-#ifdef NN_CLASSIFICATION_TASK
+#if defined(NN_CLASSIFICATION_TASK)
 		unsigned int index_output = get_index_max(output);
 		unsigned int index_etalon = get_index_max(output_etalon);
 
@@ -80,11 +80,26 @@ void Neural_network::check_training(const Training_set *training_set) const
 				num_correct_answers++;
 			}
 		}
-#else
+#elif defined(NN_TIC_TAC_TOE_TASK)
+		std::vector<double> output_normalized;
 		unsigned int num_correct_answers_cur = 0;
 
 		for (unsigned int j = 0; j < output.size(); j++) {
-			double delta = fabs(output_etalon.at(j) - output.at(j));
+			double output_cur;
+			double delta;
+
+			/* FIXME: hardcode */
+			if (output.at(j) < 0.2) {
+				output_cur = 0;
+			} else if (output.at(j) > 0.8) {
+				output_cur = 1;
+			} else {
+				output_cur = 0.5;
+			}
+
+			output_normalized.push_back(output_cur);
+
+			delta = fabs(output_etalon.at(j) - output_cur);
 			if (delta < VALIDATION_ACCURACY) {
 				num_correct_answers_cur++;
 			}
@@ -93,6 +108,8 @@ void Neural_network::check_training(const Training_set *training_set) const
 		if (num_correct_answers_cur == output.size()) {
 			num_correct_answers++;
 		}
+#else
+#error "No supported task type config is set"
 #endif
 
 #ifdef NN_DEBUG
@@ -112,6 +129,14 @@ void Neural_network::check_training(const Training_set *training_set) const
 			std::cout << "-> " << index_output;
 #endif
 		std::cout << std::endl;
+
+#ifdef NN_TIC_TAC_TOE_TASK
+		std::cout << "OUT NORMALIZED ";
+		for (unsigned int j = 0; j < output.size(); j++) {
+			std::cout << output_normalized.at(j) << " ";
+		}
+		std::cout << std::endl;
+#endif
 
 		std::cout << "ETALON ";
 		for (unsigned int j = 0; j < output_etalon.size(); j++) {

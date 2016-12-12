@@ -65,8 +65,14 @@ int main(int argc, char **argv)
 	nn->check_training(t);
 
 	std::cout << "Train nn." << std::endl;
-	/* nn.train_online(t, p); */
-	nn->train_offline(t, p);
+
+#if defined(NN_TRAIN_OFFLINE)
+	nn->train_online(t, p);
+#elif defined(NN_TRAIN_ONLINE)
+	nn->train_online(t, p);
+#else
+#error "No supported training type config is set"
+#endif
 
 	std::cout << "Check nn after training:" << std::endl;
 	nn->check_training(t);

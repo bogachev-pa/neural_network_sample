@@ -10,7 +10,13 @@ Layer::Layer(unsigned int num_inputs, unsigned int num_neurons)
 	: num_neurons(num_neurons)
 {
 	for (unsigned int i = 0; i < num_neurons; i++) {
+#if defined(NN_USE_SIGMOIDAL)
+		neurons.push_back(new Sigmoidal(num_inputs));
+#elif defined(NN_USE_PERCEPTRON)
 		neurons.push_back(new Perceptron(num_inputs));
+#else
+#error "No supported neuron type config is set"
+#endif
 	}
 }
 
