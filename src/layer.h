@@ -2,7 +2,6 @@
 #define _LAYER_H
 
 #include "neuron.h"
-#include "perceptron.h"
 
 #include <vector>
 

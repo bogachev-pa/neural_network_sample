@@ -21,6 +21,7 @@ nn_objects = \
   $(OBJDIR)/neural_network.o \
   $(OBJDIR)/layer.o \
   $(OBJDIR)/neuron.o \
+  $(OBJDIR)/sigmoidal.o \
   $(OBJDIR)/perceptron.o \
   $(OBJDIR)/training_set.o \
   $(OBJDIR)/plot.o \
@@ -45,6 +46,10 @@ $(OBJDIR)/layer.o: layer.cpp
 	$(CFLAGS) -c $< -o $@
 
 $(OBJDIR)/neuron.o: neuron.cpp
+	@mkdir -p $(OBJDIR)
+	$(CFLAGS) -c $< -o $@
+
+$(OBJDIR)/sigmoidal.o: sigmoidal.cpp
 	@mkdir -p $(OBJDIR)
 	$(CFLAGS) -c $< -o $@
 

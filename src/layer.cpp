@@ -1,5 +1,7 @@
 #include "layer.h"
 #include "neuron.h"
+#include "perceptron.h"
+#include "sigmoidal.h"
 
 #include <cmath>
 #include <vector>
