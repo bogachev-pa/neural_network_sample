@@ -4,11 +4,11 @@ Prepare:
 
 Build:
 
-`make [DEBUG=y]`
+`make [DEBUG=y] [CLASSIFICATION=y]`
 
 Run:
 
-`./bin/nn <input_file_path> <coord_file_path>`
+`./bin/nn <input_file_path> [<coord_file_path>]`
 
 For example:
 

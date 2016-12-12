@@ -10,6 +10,7 @@
 
 #define NUM_TEACHING_ITERATIONS 50
 #define TRAINING_ACCURACY 0.001
+#define VALIDATION_ACCURACY 0.01
 
 Neural_network::Neural_network(unsigned int num_inputs,
 		unsigned int num_outputs,
@@ -57,12 +58,11 @@ void Neural_network::check_training(const Training_set *training_set) const
 		std::vector<double> input = t_data->input;
 		std::vector<double> output_etalon = t_data->output;
 		std::vector<double> output;
-		unsigned int index_output;
-		unsigned int index_etalon;
-
 		output = get_output(input);
-		index_output = get_index_max(output);
-		index_etalon = get_index_max(output_etalon);
+
+#ifdef NN_CLASSIFICATION_TASK
+		unsigned int index_output = get_index_max(output);
+		unsigned int index_etalon = get_index_max(output_etalon);
 
 		if (output.size() == 1) {
 			if ((int)round(output.at(0)) == (int)round(output_etalon.at(0))) {
@@ -75,12 +75,25 @@ void Neural_network::check_training(const Training_set *training_set) const
 			if (answer == etalon) {
 				num_correct_answers++;
 			}
-
 		} else {
 			if (index_output == index_etalon) {
 				num_correct_answers++;
 			}
 		}
+#else
+		unsigned int num_correct_answers_cur = 0;
+
+		for (unsigned int j = 0; j < output.size(); j++) {
+			double delta = fabs(output_etalon.at(j) - output.at(j));
+			if (delta < VALIDATION_ACCURACY) {
+				num_correct_answers_cur++;
+			}
+		}
+
+		if (num_correct_answers_cur == output.size()) {
+			num_correct_answers++;
+		}
+#endif
 
 #ifdef NN_DEBUG
 		std::cout << "Training data #" << i << ":" << std::endl;
@@ -94,16 +107,20 @@ void Neural_network::check_training(const Training_set *training_set) const
 		for (unsigned int j = 0; j < output.size(); j++) {
 			std::cout << output.at(j) << " ";
 		}
+#ifdef NN_CLASSIFICATION_TASK
 		if (output.size() == 2)
 			std::cout << "-> " << index_output;
+#endif
 		std::cout << std::endl;
 
 		std::cout << "ETALON ";
 		for (unsigned int j = 0; j < output_etalon.size(); j++) {
 			std::cout << output_etalon.at(j) << " ";
 		}
+#ifdef NN_CLASSIFICATION_TASK
 		if (output.size() == 2)
 			std::cout << "-> " << index_etalon;
+#endif
 		std::cout << std::endl << std::endl;
 
 #endif

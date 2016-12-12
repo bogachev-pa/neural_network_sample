@@ -15,8 +15,8 @@ else
   CFLAGS += -O3 -DNDEBUG
 endif
 
-ifeq ($(PLOT_COORD), y)
-  CFLAGS += -DNN_PLOT_COORD
+ifeq ($(CLASSIFICATION), y)
+  CFLAGS += -DNN_CLASSIFICATION_TASK -DNN_PLOT_COORD
 endif
 
 nn_binary = $(BINDIR)/nn
