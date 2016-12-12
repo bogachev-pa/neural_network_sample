@@ -31,6 +31,10 @@ Training_set::Training_set(std::string init_file_path)
 	iss.clear();
 
 	while (getline(init_file, line)) {
+		if (line.find("//") != std::string::npos) {
+			continue;
+		}
+
 		Training_data *t_data = new Training_data();
 		iss.str(line);
 
