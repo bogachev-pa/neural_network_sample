@@ -160,6 +160,13 @@ void Neural_network::train_online(const Training_set *training_set, const Plot *
 			= training_set->training_data_arr;
 	unsigned int counter = 0;
 
+	if (num_layers > 1) {
+		std::cout << "Online training not allowed for multi-layer nn." << std::endl;
+		std::cout << "Use back-propagation training." << std::endl;
+	}
+
+	Layer *layer = layers.at(0);
+
 	set_random_weights();
 
 	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
@@ -168,16 +175,12 @@ void Neural_network::train_online(const Training_set *training_set, const Plot *
 		for (unsigned int j = 0; j < training_data_arr.size(); j++) {
 			std::vector<double> input = training_data_arr.at(j)->input;
 			std::vector<double> output_etalon = training_data_arr.at(j)->output;
+			double delta;
 
-			for (unsigned int k = 0; k < num_layers; k++) {
-				Layer *layer = layers.at(k);
-				double delta;
+			delta = layer->train_online(input, output_etalon);
 
-				delta = layer->train_online(input, output_etalon);
-
-				if (fabs(delta) > max_delta)
-					max_delta = fabs(delta);
-			}
+			if (fabs(delta) > max_delta)
+				max_delta = fabs(delta);
 
 			plot->make_weights_datasheet(this, counter++);
 		}
@@ -232,24 +235,27 @@ void Neural_network::train_offline(const Training_set *training_set, const Plot 
 	unsigned int counter = 0;
 	double nu_max;
 
+	if (num_layers > 1) {
+		std::cout << "Offline training not allowed for multi-layer nn." << std::endl;
+		std::cout << "Use back-propagation training." << std::endl;
+	}
+
 	Train_error_nn train_error_nn = Train_error_nn(layers);
+	Layer *layer = layers.at(0);
 
 	set_random_weights();
 
 	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
-		for (unsigned int j = 0; j < num_layers; j++) {
-			Layer *layer = layers.at(j);
-			for (unsigned int k = 0; k < layer->num_neurons; k++) {
-				Train_error_neuron *train_error_neuron = train_error_nn.error_neurons.at(j).at(k);
-				Neuron *neuron = layer->neurons.at(k);
-				double error_cur;
+		for (unsigned int k = 0; k < layer->num_neurons; k++) {
+			Train_error_neuron *train_error_neuron = train_error_nn.error_neurons.at(0).at(k);
+			Neuron *neuron = layer->neurons.at(k);
+			double error_cur;
 
-				neuron->print_weights();
-				error_cur = train_neuron_offline(training_set,
-						neuron, k, train_error_neuron->nu);
+			neuron->print_weights();
+			error_cur = train_neuron_offline(training_set,
+					neuron, k, train_error_neuron->nu);
 
-				train_error_neuron->update(error_cur);
-			}
+			train_error_neuron->update(error_cur);
 		}
 
 		plot->make_weights_datasheet(this, counter++);
