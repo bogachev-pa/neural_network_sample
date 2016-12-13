@@ -50,7 +50,8 @@ int main(int argc, char **argv)
 
 	Training_set *t = new Training_set(input_file_path);
 	/* For now hardcode number of layers as 1. */
-	Neural_network *nn = new Neural_network(t->num_inputs, t->num_outputs, 1);
+	Neural_network *nn = new Neural_network(t->num_inputs, t->num_outputs,
+			NN_NUM_LAYERS);
 
 	p = new Plot();
 	p->init_weights(t->num_inputs, t->num_outputs);
@@ -66,12 +67,11 @@ int main(int argc, char **argv)
 
 	std::cout << "Train nn." << std::endl;
 
-#if defined(NN_TRAIN_OFFLINE)
-	nn->train_online(t, p);
-#elif defined(NN_TRAIN_ONLINE)
-	nn->train_online(t, p);
+#if defined(NN_TRAIN_BACK_PROPAGATE)
+	nn->train_back_propagate(t, p);
 #else
-#error "No supported training type config is set"
+	nn->train_offline(t, p);
+	/* nn->train_online(t, p); */
 #endif
 
 	std::cout << "Check nn after training:" << std::endl;

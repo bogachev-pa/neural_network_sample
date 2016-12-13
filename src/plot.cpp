@@ -112,6 +112,7 @@ void Plot::run_plot(void) const
 void Plot::init_weights(unsigned int num_inputs, unsigned int num_outputs) const
 {
 	unsigned int counter;
+	unsigned int i_start;
 
 	std::ofstream weights_script(PLOT_WEIGHTS_PATH);
 	weights_script << "set term x11;" << std::endl;
@@ -122,8 +123,14 @@ void Plot::init_weights(unsigned int num_inputs, unsigned int num_outputs) const
 
 	counter = 0;
 
+#ifdef NN_ENABLE_POLARIZED
 	/* i starts from 1 to skip polarizing signal */
-	for (unsigned int i = 1; i < num_inputs; i++) {
+	i_start = 1;
+#else
+	i_start = 0;
+#endif
+
+	for (unsigned int i = i_start; i < num_inputs; i++) {
 		for (unsigned int j = 0; j < num_outputs; j++) {
 			unsigned int y_column_pos = counter + 2;
 			unsigned int color_num = counter + 1;

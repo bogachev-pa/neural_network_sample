@@ -154,6 +154,85 @@ void Neural_network::check_training(const Training_set *training_set) const
 	std::cout << num_correct_answers << " out of " << training_data_arr.size() << " answers are correct" << std::endl;
 }
 
+/* FIXME: adjust */
+#define NU 4
+
+void Neural_network::train_back_propagate_one(const Training_set::Training_data *training_data)
+{
+	std::vector<double> input = training_data->input;
+	std::vector<double> output_etalon = training_data->output;
+	std::vector<double> output;
+	Layer *last_layer = layers.at(num_layers - 1);
+	Layer *current_layer;
+
+	output = get_output(input);
+
+	for (unsigned int i = 0; i < last_layer->num_neurons; i++) {
+		Neuron *neuron = last_layer->neurons.at(i);
+
+		neuron->delta_cur = output.at(i) - output_etalon.at(i);
+	}
+
+	/* Back propagation */
+	for (int i = num_layers - 2; i >= 0; i--) {
+		current_layer = layers.at(i);
+
+		for (unsigned int j = 0; j < current_layer->num_neurons; j++) {
+			Neuron *neuron = current_layer->neurons.at(j);
+
+			double delta_cur = 0;
+			for (unsigned int k = 0; k < last_layer->num_neurons; k++) {
+				Neuron *next_neuron = last_layer->neurons.at(k);
+
+				double weight = next_neuron->w.at(j);
+				double delta = next_neuron->delta_cur;
+
+				delta_cur += weight * delta;
+			}
+
+			neuron->delta_cur = delta_cur;
+		}
+
+		last_layer = current_layer;
+	}
+
+	/* Calculating new weights */
+	std::vector<double> current_input = input;
+
+	for (unsigned int i = 0; i < num_layers; i++) {
+		Layer *layer = layers.at(i);
+		std::vector<double> current_output = layer->get_output(current_input);
+
+		for (unsigned int j = 0; j < layer->num_neurons; j++) {
+			Neuron *neuron = layer->neurons.at(j);
+			double w_output = neuron->get_output(current_input);
+			double d_S = w_output * (1 - w_output);
+
+			for (unsigned int k = 0; k < neuron->num_inputs; k++) {
+				neuron->w.at(k) -= NU * neuron->delta_cur * d_S * current_input.at(k);
+			}
+		}
+
+		current_input = current_output;
+	}
+}
+
+void Neural_network::train_back_propagate(const Training_set *training_set, const Plot *plot)
+{
+	std::vector<Training_set::Training_data *> training_data_arr
+			= training_set->training_data_arr;
+
+	set_random_weights();
+
+	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
+		for (unsigned int j = 0; j < training_data_arr.size(); j++) {
+			train_back_propagate_one(training_data_arr.at(j));
+		}
+	}
+
+	print_weights();
+}
+
 void Neural_network::train_online(const Training_set *training_set, const Plot *plot)
 {
 	std::vector<Training_set::Training_data *> training_data_arr
@@ -192,6 +271,8 @@ void Neural_network::train_online(const Training_set *training_set, const Plot *
 			return;
 		}
 	}
+
+	print_weights();
 }
 
 double Neural_network::train_neuron_offline(const Training_set *training_set,
@@ -251,7 +332,6 @@ void Neural_network::train_offline(const Training_set *training_set, const Plot 
 			Neuron *neuron = layer->neurons.at(k);
 			double error_cur;
 
-			neuron->print_weights();
 			error_cur = train_neuron_offline(training_set,
 					neuron, k, train_error_neuron->nu);
 
@@ -264,9 +344,12 @@ void Neural_network::train_offline(const Training_set *training_set, const Plot 
 		nu_max = train_error_nn.get_max_nu();
 		if (nu_max < TRAINING_ACCURACY) {
 			std::cout << "Nu max is too small, so exiting after " << i + 1 << " iterations." << std::endl;
+			print_weights();
 			return;
 		}
 	}
+
+	print_weights();
 }
 
 void Neural_network::set_random_weights(void)
@@ -275,5 +358,17 @@ void Neural_network::set_random_weights(void)
 		Layer *l = layers.at(i);
 
 		l->set_random_weights();
+	}
+}
+
+void Neural_network::print_weights(void)
+{
+	for (unsigned int i = 0; i < num_layers; i++) {
+		Layer *layer = layers.at(i);
+		for (unsigned int j = 0; j < layer->num_neurons; j++) {
+			Neuron *neuron = layer->neurons.at(j);
+
+			neuron->print_weights();
+		}
 	}
 }

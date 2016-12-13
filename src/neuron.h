@@ -20,6 +20,8 @@ public:
 	std::vector<double> w;
 	unsigned int num_inputs;
 	double get_weighted_output(const std::vector<double>& inputs) const;
+
+	double delta_cur;
 };
 
 #endif //_NEURON_H

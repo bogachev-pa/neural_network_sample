@@ -9,8 +9,8 @@
 #include <cfloat>
 #include <vector>
 
-#define TRAIN_ERROR_NU_UP_MODIFIER 1.5
-#define TRAIN_ERROR_NU_DOWN_MODIFIER 2
+#define TRAIN_ERROR_NU_UP_MODIFIER 1
+#define TRAIN_ERROR_NU_DOWN_MODIFIER 1
 #define TRAIN_ERROR_UP_STREAK_LIMIT 1
 
 class Neural_network {
@@ -79,6 +79,7 @@ public:
 	virtual ~Neural_network(void);
 
 	void check_training(const Training_set *training_set) const;
+	void train_back_propagate(const Training_set *training_set, const Plot *plot);
 	void train_online(const Training_set *training_set, const Plot *plot);
 	void train_offline(const Training_set *training_set, const Plot *plot);
 	std::vector<double> get_output(const std::vector<double>& input) const;
@@ -90,8 +91,10 @@ public:
 	std::vector<Layer *> layers;
 protected:
 	void set_random_weights(void);
+	void train_back_propagate_one(const Training_set::Training_data *training_data);
 	double train_neuron_offline(const Training_set *training_set,
 			Neuron *neuron, unsigned int num, double nu);
+	void print_weights(void);
 };
 
 #endif //_NEURAL_NETWORK_H

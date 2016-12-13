@@ -38,8 +38,10 @@ Training_set::Training_set(std::string init_file_path)
 		Training_data *t_data = new Training_data();
 		iss.str(line);
 
+#ifdef NN_ENABLE_POLARIZED
 		/* Поляризационный сигнал */
 		t_data->input.push_back(1);
+#endif
 
 		for (unsigned int i = 0; i < num_inputs; i++) {
 			double input;
@@ -59,8 +61,10 @@ Training_set::Training_set(std::string init_file_path)
 		iss.clear();
 	}
 
+#ifdef NN_ENABLE_POLARIZED
 	/* Учет поляризационного сигнала */
 	num_inputs++;
+#endif
 
 	print_data();
 }

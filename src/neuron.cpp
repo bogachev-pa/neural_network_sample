@@ -9,7 +9,7 @@
 #include <vector>
 #include <cmath>
 
-Neuron::Neuron(unsigned int num_inputs) : num_inputs(num_inputs)
+Neuron::Neuron(unsigned int num_inputs) : num_inputs(num_inputs), delta_cur(0)
 {
 	for (unsigned int i = 0; i < num_inputs; i++) {
 		w.push_back(0);
@@ -51,10 +51,8 @@ double Neuron::get_weighted_output(const std::vector<double>& inputs) const
 void Neuron::set_random_weights(void)
 {
 	for (unsigned int i = 0; i < num_inputs; i++) {
-		w.at(i) = ((double) rand() / RAND_MAX);
+		w.at(i) = ((double) rand() / RAND_MAX) * 0.05;
 	}
-
-	print_weights();
 }
 
 double Neuron::train_online(const std::vector<double>& input,
