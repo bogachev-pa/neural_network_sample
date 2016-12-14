@@ -3,6 +3,8 @@
 
 #include "neuron.h"
 
+#define SIGMOIDAL_B_COEF (0.4)
+
 class Sigmoidal : public Neuron {
 public:
 	Sigmoidal(unsigned int num_inputs);

@@ -12,12 +12,13 @@
 #define TRAIN_ERROR_NU_UP_MODIFIER 1
 #define TRAIN_ERROR_NU_DOWN_MODIFIER 1
 #define TRAIN_ERROR_UP_STREAK_LIMIT 1
+#define TRAIN_ERROR_NU_INITIAL 0.7
 
 class Neural_network {
 public:
 	class Train_error_neuron {
 	public:
-		Train_error_neuron(void) : error_prev(DBL_MAX), nu(0.5), successes_in_a_row(0)
+		Train_error_neuron(void) : error_prev(DBL_MAX), nu(TRAIN_ERROR_NU_INITIAL), successes_in_a_row(0)
 		{}
 
 		void update(double error_new)
@@ -52,6 +53,15 @@ public:
 
 				for (unsigned int j = 0; j < layers.at(i)->num_neurons; j++) {
 					error_neurons.at(i).push_back(new Train_error_neuron());
+				}
+			}
+		}
+
+		~Train_error_nn(void)
+		{
+			for (unsigned int i = 0; i < error_neurons.size(); i++) {
+				for (unsigned int j = 0; j < error_neurons.at(i).size(); j++) {
+					delete error_neurons.at(i).at(j);
 				}
 			}
 		}
@@ -91,7 +101,8 @@ public:
 	std::vector<Layer *> layers;
 protected:
 	void set_random_weights(void);
-	void train_back_propagate_one(const Training_set::Training_data *training_data);
+	double train_back_propagate_one(const Training_set::Training_data *training_data,
+			Train_error_nn *train_error_nn);
 	double train_neuron_offline(const Training_set *training_set,
 			Neuron *neuron, unsigned int num, double nu);
 	void print_weights(void);

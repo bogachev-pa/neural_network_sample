@@ -1,6 +1,7 @@
 #include "neural_network.h"
 #include "layer.h"
 #include "plot.h"
+#include "sigmoidal.h"
 #include "training_set.h"
 #include "util.h"
 
@@ -8,7 +9,6 @@
 #include <climits>
 #include <vector>
 
-#define NUM_TEACHING_ITERATIONS 50
 #define TRAINING_ACCURACY 0.001
 #define VALIDATION_ACCURACY 0.01
 
@@ -54,6 +54,7 @@ void Neural_network::check_training(const Training_set *training_set) const
 	std::vector<Training_set::Training_data *> training_data_arr = training_set->training_data_arr;
 
 	for (unsigned int i = 0; i < training_data_arr.size(); i++) {
+		bool answer_correct = false;
 		Training_set::Training_data *t_data = training_data_arr.at(i);
 		std::vector<double> input = t_data->input;
 		std::vector<double> output_etalon = t_data->output;
@@ -66,18 +67,18 @@ void Neural_network::check_training(const Training_set *training_set) const
 
 		if (output.size() == 1) {
 			if ((int)round(output.at(0)) == (int)round(output_etalon.at(0))) {
-				num_correct_answers++;
+				answer_correct = true;
 			}
 		} else if (output.size() == 2) {
 			unsigned int answer = output_to_code(output);
 			unsigned int etalon = output_to_code(output_etalon);
 
 			if (answer == etalon) {
-				num_correct_answers++;
+				answer_correct = true;
 			}
 		} else {
 			if (index_output == index_etalon) {
-				num_correct_answers++;
+				answer_correct = true;
 			}
 		}
 #elif defined(NN_TIC_TAC_TOE_TASK)
@@ -106,14 +107,17 @@ void Neural_network::check_training(const Training_set *training_set) const
 		}
 
 		if (num_correct_answers_cur == output.size()) {
-			num_correct_answers++;
+			answer_correct = true;
 		}
 #else
 #error "No supported task type config is set"
 #endif
 
+		if (answer_correct)
+			num_correct_answers++;
+
 #ifdef NN_DEBUG
-		std::cout << "Training data #" << i << ":" << std::endl;
+		std::cout << "Training data #" << i << ", " << (answer_correct ? "correct" : "wrong") << ":" << std::endl;
 		std::cout << "IN ";
 		for (unsigned int j = 0; j < input.size(); j++) {
 			std::cout << input.at(j) << " ";
@@ -154,10 +158,8 @@ void Neural_network::check_training(const Training_set *training_set) const
 	std::cout << num_correct_answers << " out of " << training_data_arr.size() << " answers are correct" << std::endl;
 }
 
-/* FIXME: adjust */
-#define NU 4
-
-void Neural_network::train_back_propagate_one(const Training_set::Training_data *training_data)
+double Neural_network::train_back_propagate_one(const Training_set::Training_data *training_data,
+		Train_error_nn *train_error_nn)
 {
 	std::vector<double> input = training_data->input;
 	std::vector<double> output_etalon = training_data->output;
@@ -165,12 +167,27 @@ void Neural_network::train_back_propagate_one(const Training_set::Training_data 
 	Layer *last_layer = layers.at(num_layers - 1);
 	Layer *current_layer;
 
+	double max_delta = 0;
+
 	output = get_output(input);
 
 	for (unsigned int i = 0; i < last_layer->num_neurons; i++) {
 		Neuron *neuron = last_layer->neurons.at(i);
+		double output_cur = output.at(i);
 
-		neuron->delta_cur = output.at(i) - output_etalon.at(i);
+#if defined(NN_TIC_TAC_TOE_TASK)
+		if (output.at(i) < 0.2) {
+			output_cur = 0;
+		} else if (output.at(i) > 0.8) {
+			output_cur = 1;
+		} else {
+			output_cur = 0.5;
+		}
+#endif
+
+		neuron->delta_cur = output_cur - output_etalon.at(i);
+		if (fabs(neuron->delta_cur) > max_delta)
+			max_delta = fabs(neuron->delta_cur);
 	}
 
 	/* Back propagation */
@@ -190,7 +207,9 @@ void Neural_network::train_back_propagate_one(const Training_set::Training_data 
 				delta_cur += weight * delta;
 			}
 
-			neuron->delta_cur = delta_cur;
+			neuron->delta_cur = delta_cur / last_layer->num_neurons;
+			if (fabs(neuron->delta_cur) > max_delta)
+				max_delta = fabs(neuron->delta_cur);
 		}
 
 		last_layer = current_layer;
@@ -205,30 +224,51 @@ void Neural_network::train_back_propagate_one(const Training_set::Training_data 
 
 		for (unsigned int j = 0; j < layer->num_neurons; j++) {
 			Neuron *neuron = layer->neurons.at(j);
+			Train_error_neuron *train_error_neuron = train_error_nn->error_neurons.at(i).at(j);
 			double w_output = neuron->get_output(current_input);
-			double d_S = w_output * (1 - w_output);
+			double d_S = SIGMOIDAL_B_COEF * w_output * (1 - w_output);
 
 			for (unsigned int k = 0; k < neuron->num_inputs; k++) {
-				neuron->w.at(k) -= NU * neuron->delta_cur * d_S * current_input.at(k);
+				neuron->w.at(k) -= train_error_neuron->nu * neuron->delta_cur * d_S * current_input.at(k);
 			}
+
+			train_error_neuron->update(neuron->delta_cur);
 		}
 
 		current_input = current_output;
 	}
+
+	return max_delta;
 }
 
 void Neural_network::train_back_propagate(const Training_set *training_set, const Plot *plot)
 {
 	std::vector<Training_set::Training_data *> training_data_arr
 			= training_set->training_data_arr;
+	double max_delta = 0;
 
 	set_random_weights();
 
-	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
+	Train_error_nn *train_error_nn = new Train_error_nn(layers);
+
+	for (unsigned int i = 0; i < NN_NUM_TEACHING_ITERATIONS; i++) {
 		for (unsigned int j = 0; j < training_data_arr.size(); j++) {
-			train_back_propagate_one(training_data_arr.at(j));
+			double delta;
+
+			delta = train_back_propagate_one(training_data_arr.at(j), train_error_nn);
+			if (fabs(delta) > max_delta)
+				max_delta = fabs(delta);
+		}
+
+		// std::cout << "max_delta = " << max_delta << std::endl;
+
+		if (max_delta < TRAINING_ACCURACY) {
+			std::cout << "Weights delta is too small, so exiting after " << i + 1 << " iterations." << std::endl;
+			break;
 		}
 	}
+
+	delete train_error_nn;
 
 	print_weights();
 }
@@ -248,7 +288,7 @@ void Neural_network::train_online(const Training_set *training_set, const Plot *
 
 	set_random_weights();
 
-	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
+	for (unsigned int i = 0; i < NN_NUM_TEACHING_ITERATIONS; i++) {
 		double max_delta = 0;
 
 		for (unsigned int j = 0; j < training_data_arr.size(); j++) {
@@ -326,7 +366,7 @@ void Neural_network::train_offline(const Training_set *training_set, const Plot 
 
 	set_random_weights();
 
-	for (unsigned int i = 0; i < NUM_TEACHING_ITERATIONS; i++) {
+	for (unsigned int i = 0; i < NN_NUM_TEACHING_ITERATIONS; i++) {
 		for (unsigned int k = 0; k < layer->num_neurons; k++) {
 			Train_error_neuron *train_error_neuron = train_error_nn.error_neurons.at(0).at(k);
 			Neuron *neuron = layer->neurons.at(k);

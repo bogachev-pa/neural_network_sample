@@ -6,13 +6,13 @@ OBJDIR = obj
 BINDIR = bin
 PLOTDIR = plot
 
-CC = g++ -std=c++03
+CC = g++ -std=c++03 -O3
 CFLAGS = $(CC) -Wall
 
 ifeq ($(DEBUG), y)
-  CFLAGS += -g -O0 -DNN_DEBUG
+  CFLAGS += -DNN_DEBUG
 else
-  CFLAGS += -O3 -DNDEBUG
+  CFLAGS += -DNDEBUG
 endif
 
 ifeq ($(CLASSIFICATION), y)
@@ -21,13 +21,16 @@ ifeq ($(CLASSIFICATION), y)
     -DNN_PLOT_COORD \
     -DNN_USE_PERCEPTRON \
     -DNN_ENABLE_POLARIZED \
-    -DNN_NUM_LAYERS=1
+    -DNN_NUM_LAYERS=1 \
+    -DNN_NUM_TEACHING_ITERATIONS=50
 else
   CFLAGS += \
     -DNN_TIC_TAC_TOE_TASK \
     -DNN_USE_SIGMOIDAL \
     -DNN_TRAIN_BACK_PROPAGATE \
-    -DNN_NUM_LAYERS=2
+    -DNN_CHECK_SEPARATE \
+    -DNN_NUM_LAYERS=2 \
+    -DNN_NUM_TEACHING_ITERATIONS=2000
 endif
 
 nn_binary = $(BINDIR)/nn
