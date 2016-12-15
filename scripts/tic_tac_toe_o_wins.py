@@ -130,7 +130,7 @@ for c[0] in range(3):
                                         if unique_only:
                                             append_unique(l, c)
                                         else:
-                                            l.append(c)
+                                            l.append(list(c))
 
 i = 0
 for x in l:
